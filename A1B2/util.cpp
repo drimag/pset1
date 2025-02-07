@@ -32,9 +32,11 @@ bool isPrime(int n)
 void showTime()
 {
     auto now = std::chrono::system_clock::now();
-    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+    auto now_time_t = std::chrono::system_clock::to_time_t(now);
     std::tm now_tm = *std::localtime(&now_time_t);
-    std::cout << std::put_time(&now_tm, " %Y-%m-%d %H:%M:%S") << "\n";
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+    std::cout << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S")
+              << "." << std::setw(3) << std::setfill('0') << milliseconds.count() << "\n";
 }
 
 void threadFunction(int threadId, int maxNumber)
@@ -47,6 +49,7 @@ void threadFunction(int threadId, int maxNumber)
 
         if (isPrime(num))
         {
+            std::lock_guard<std::mutex> lock(threadMutex);
             std::cout << "Thread " << threadId << " found prime: " << num << " || ";
             showTime();
         }
