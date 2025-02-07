@@ -1,89 +1,13 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
+#include "util.h"
 #include <thread>
-#include <mutex>
-#include <iomanip>
-#include <chrono>
-#include <ctime>
-#include <vector>
-
-std::mutex threadMutex;
-
-void showTime()
-{
-    auto now = std::chrono::system_clock::now();
-    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-    std::tm now_tm = *std::localtime(&now_time_t);
-    std::cout << std::put_time(&now_tm, " %Y-%m-%d %H:%M:%S") << "\n";
-}
-
-bool isPrime(int n)
-{
-    if (n <= 1)
-    {
-        return false;
-    }
-    if (n == 2)
-    {
-        return true;
-    }
-    if (n % 2 == 0)
-    {
-        return false;
-    }
-
-    for (int i = 3; i < n; i += 2)
-    {
-        if (n % i == 0)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-void threadFunction(int threadId, int range, int extra)
-{
-    int start = range * (threadId - 1) + 1;
-    int end = range * threadId;
-
-    if (threadId <= extra)
-    {
-        start += threadId - 1;
-        end += threadId;
-    }
-    else if (threadId > extra)
-    {
-        start += extra;
-        end += extra;
-    }
-
-    for (int i = start; i < end + 1; i++)
-    {
-        threadMutex.lock();
-        if (isPrime(i))
-        {
-            auto now = std::chrono::system_clock::now();
-            std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-            std::tm now_tm = *std::localtime(&now_time_t);
-            std::cout << i << " is a prime number " << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S") << "\n";
-        }
-        // std::cout << "thread no: " << threadId << ", " << i << " \n";
-        threadMutex.unlock();
-    }
-}
 
 int main()
 {
     int threadCount, range;
     std::vector<std::thread> threads;
-    std::ifstream config("config.txt");
 
-    if (!(config >> threadCount >> range))
+    if (!readConfig("config.txt", threadCount, range))
     {
-        std::cerr << "Error reading config file.\n";
         return 1;
     }
 
