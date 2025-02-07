@@ -11,7 +11,7 @@ int main()
         return 1;
     }
 
-    std::cout << "Starting Execution on: ";
+    std::cout << "Started Execution on: ";
     showTime();
 
     if (range < threadCount)
