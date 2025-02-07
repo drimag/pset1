@@ -6,8 +6,10 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <atomic>
 
 std::mutex threadMutex;
+std::atomic<int> nextNumber;
 
 bool isPrime(int n)
 {
@@ -35,28 +37,17 @@ void showTime()
     std::cout << std::put_time(&now_tm, " %Y-%m-%d %H:%M:%S") << "\n";
 }
 
-void threadFunction(int threadId, int range, int extra)
+void threadFunction(int threadId, int maxNumber)
 {
-    int start = range * (threadId - 1) + 1;
-    int end = range * threadId;
+    while (true)
+    {
+        int num = nextNumber.fetch_add(1);
+        if (num > maxNumber)
+            break;
 
-    if (threadId <= extra)
-    {
-        start += threadId - 1;
-        end += threadId;
-    }
-    else if (threadId > extra)
-    {
-        start += extra;
-        end += extra;
-    }
-
-    for (int i = start; i < end + 1; i++)
-    {
-        std::lock_guard<std::mutex> lock(threadMutex);
-        if (isPrime(i))
+        if (isPrime(num))
         {
-            std::cout << "Thread " << threadId << " found prime: " << i << " || ";
+            std::cout << "Thread " << threadId << " found prime: " << num << " || ";
             showTime();
         }
     }
