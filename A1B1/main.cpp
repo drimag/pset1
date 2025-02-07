@@ -8,6 +8,8 @@
 #include <ctime>
 #include <vector>
 
+std::mutex threadMutex;
+
 void showTime()
 {
     auto now = std::chrono::system_clock::now();
@@ -44,30 +46,32 @@ bool isPrime(int n)
 
 void threadFunction(int threadId, int range, int extra)
 {
-    int start = range * (threadId - 1);
+    int start = range * (threadId - 1) + 1;
     int end = range * threadId;
 
-    if (threadId >= extra)
+    if (threadId <= extra)
+    {
+        start += threadId - 1;
+        end += threadId;
+    }
+    else if (threadId > extra)
     {
         start += extra;
         end += extra;
     }
-    else if (threadId < extra)
-    {
-        start += threadId;
-        end += threadId;
-    }
 
-    for (int i = start; i < end; i++)
+    for (int i = start; i < end + 1; i++)
     {
-        // if (isPrime(i))
-        // {
-        //     auto now = std::chrono::system_clock::now();
-        //     std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-        //     std::tm now_tm = *std::localtime(&now_time_t);
-        //     std::cout << i << " is a prime number " << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S") << "\n";
-        // }
-        std::cout << i << "\n";
+        threadMutex.lock();
+        if (isPrime(i))
+        {
+            auto now = std::chrono::system_clock::now();
+            std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+            std::tm now_tm = *std::localtime(&now_time_t);
+            std::cout << i << " is a prime number " << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S") << "\n";
+        }
+        // std::cout << "thread no: " << threadId << ", " << i << " \n";
+        threadMutex.unlock();
     }
 }
 
@@ -83,7 +87,7 @@ int main()
         return 1;
     }
 
-    std::cout << "Starting Execution at: ";
+    std::cout << "Starting Execution on: ";
     showTime();
 
     if (range < threadCount)
@@ -102,7 +106,7 @@ int main()
         t.join();
     }
 
-    std::cout << "Finished Execution at: ";
+    std::cout << "Finished Execution on: ";
     showTime();
 
     system("pause");
