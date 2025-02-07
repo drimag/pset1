@@ -8,6 +8,7 @@ int main()
 
     if (!readConfig("config.txt", threadCount, range))
     {
+        system("pause");
         return 1;
     }
 
