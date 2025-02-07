@@ -6,6 +6,15 @@
 #include <iomanip>
 #include <chrono>
 #include <ctime>
+#include <vector>
+
+void showTime()
+{
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+    std::tm now_tm = *std::localtime(&now_time_t);
+    std::cout << std::put_time(&now_tm, " %Y-%m-%d %H:%M:%S") << "\n";
+}
 
 bool isPrime(int n)
 {
@@ -33,31 +42,68 @@ bool isPrime(int n)
     return true;
 }
 
+void threadFunction(int threadId, int range, int extra)
+{
+    int start = range * (threadId - 1);
+    int end = range * threadId;
+
+    if (threadId >= extra)
+    {
+        start += extra;
+        end += extra;
+    }
+    else if (threadId < extra)
+    {
+        start += threadId;
+        end += threadId;
+    }
+
+    for (int i = start; i < end; i++)
+    {
+        // if (isPrime(i))
+        // {
+        //     auto now = std::chrono::system_clock::now();
+        //     std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+        //     std::tm now_tm = *std::localtime(&now_time_t);
+        //     std::cout << i << " is a prime number " << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S") << "\n";
+        // }
+        std::cout << i << "\n";
+    }
+}
+
 int main()
 {
-    int x, y;
+    int threadCount, range;
+    std::vector<std::thread> threads;
     std::ifstream config("config.txt");
 
-    if (!(config >> x >> y))
+    if (!(config >> threadCount >> range))
     {
         std::cerr << "Error reading config file.\n";
         return 1;
     }
 
-    auto now = std::chrono::system_clock::now();
-    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-    std::tm now_tm = *std::localtime(&now_time_t);
-    std::cout << x << " " << y << std::put_time(&now_tm, " %Y-%m-%d %H:%M:%S") << "\n";
+    std::cout << "Starting Execution at: ";
+    showTime();
 
-    if (isPrime(x))
+    if (range < threadCount)
+        threadCount = range;
+
+    int rangePerThread = range / threadCount;
+    int extra = range % threadCount;
+
+    for (int i = 0; i < threadCount; ++i)
     {
-        auto now = std::chrono::system_clock::now();
-        std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-        std::tm now_tm = *std::localtime(&now_time_t);
-
-        // TODO: include thread no.
-        std::cout << x << " is a prime number " << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S") << "\n";
+        threads.emplace_back(threadFunction, i + 1, rangePerThread, extra);
     }
+
+    for (auto &t : threads)
+    {
+        t.join();
+    }
+
+    std::cout << "Finished Execution at: ";
+    showTime();
 
     system("pause");
 
